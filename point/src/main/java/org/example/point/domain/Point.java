@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "points")
@@ -18,8 +19,23 @@ public class Point {
 
     private Long amount;
 
+    private Long reservedAmount;
+
+    @Version
+    private Long version;
+
     public Point() {
 
+    }
+
+    public void reserve(Long reserveAmount) {
+        long reservableAmount = this.amount - reserveAmount;
+
+        if(reservableAmount < reserveAmount) {
+            throw new RuntimeException("금액이 부족합니다.");
+        }
+
+        reservedAmount += reserveAmount;
     }
 
     public Point(Long userId, Long amount) {
@@ -33,5 +49,9 @@ public class Point {
         }
 
         this.amount -= amount;
+    }
+
+    public Long getId() {
+        return id;
     }
 }
