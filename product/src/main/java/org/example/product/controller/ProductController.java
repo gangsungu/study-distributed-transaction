@@ -3,6 +3,7 @@ package org.example.product.controller;
 import org.example.product.application.ProductFacadeService;
 import org.example.product.application.RedisLockService;
 import org.example.product.application.dto.ProductReserveResult;
+import org.example.product.controller.dto.ProductReserveCancelRequest;
 import org.example.product.controller.dto.ProductReserveConfirmRequest;
 import org.example.product.controller.dto.ProductReserveRequest;
 import org.example.product.controller.dto.ProductReserveResponse;
@@ -49,6 +50,23 @@ public class ProductController {
 
         try {
             productFacadeService.confirmReserve(request.toCommand());
+        }
+        finally {
+            redisLockService.releaseLock(key);
+        }
+    }
+
+    @PostMapping("/product/cancel")
+    public void cancel(@RequestBody ProductReserveCancelRequest request) {
+        String key = "product:" + request.requestId();
+        boolean acquiredLock = redisLockService.tryLock(key, request.requestId());
+
+        if(!acquiredLock) {
+            throw new RuntimeException("락 획득에 실패했습니다.");
+        }
+
+        try {
+            productFacadeService.cancelReserve(request.toCommand());
         }
         finally {
             redisLockService.releaseLock(key);
