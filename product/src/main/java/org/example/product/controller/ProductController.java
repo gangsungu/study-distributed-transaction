@@ -3,6 +3,7 @@ package org.example.product.controller;
 import org.example.product.application.ProductFacadeService;
 import org.example.product.application.RedisLockService;
 import org.example.product.application.dto.ProductReserveResult;
+import org.example.product.controller.dto.ProductReserveConfirmRequest;
 import org.example.product.controller.dto.ProductReserveRequest;
 import org.example.product.controller.dto.ProductReserveResponse;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,6 @@ public class ProductController {
 
     @PostMapping("/product/reserve")
     public ProductReserveResponse reserveProduct(@RequestBody ProductReserveRequest request) {
-        System.out.println("Reserving product");
         String key = "product:" + request.requestId();
         boolean acquiredLock = redisLockService.tryLock(key, request.requestId());
 
@@ -32,6 +32,23 @@ public class ProductController {
         try {
             ProductReserveResult result = productFacadeService.tryReserve(request.toCommand());
             return new ProductReserveResponse(result.totalPrice());
+        }
+        finally {
+            redisLockService.releaseLock(key);
+        }
+    }
+
+    @PostMapping("/product/confirm")
+    public void confirm(@RequestBody ProductReserveConfirmRequest request) {
+        String key = "product:" + request.requestId();
+        boolean acquiredLock = redisLockService.tryLock(key, request.requestId());
+
+        if(!acquiredLock) {
+            throw new RuntimeException("락 획득에 실패했습니다.");
+        }
+
+        try {
+            productFacadeService.confirmReserve(request.toCommand());
         }
         finally {
             redisLockService.releaseLock(key);

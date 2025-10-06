@@ -20,7 +20,7 @@ public class ProductReservation {
 
     private Long productId;
 
-    private Long reservationQuantity;
+    private Long reservedQuantity;
 
     private Long reservedPrice;
 
@@ -31,16 +31,36 @@ public class ProductReservation {
 
     }
 
-    public ProductReservation(String requestId, Long productId, Long reservationQuantity, Long reservedPrice) {
+    public ProductReservation(String requestId, Long productId, Long reservedQuantity, Long reservedPrice) {
         this.requestId = requestId;
         this.productId = productId;
-        this.reservationQuantity = reservationQuantity;
+        this.reservedQuantity = reservedQuantity;
         this.reservedPrice = reservedPrice;
         status = ProductReservationStatus.RESERVED;
     }
 
+    public void confirm() {
+        if(this.status == ProductReservationStatus.CANCELLED) {
+            throw new RuntimeException("이미 취소된 예약입니다.");
+        }
+
+        this.status = ProductReservationStatus.CONFIRMED;
+    }
+
     public Long getReservedPrice() {
         return reservedPrice;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public Long getReservedQuantity() {
+        return reservedQuantity;
+    }
+
+    public ProductReservationStatus getStatus() {
+        return status;
     }
 
     public enum ProductReservationStatus {
